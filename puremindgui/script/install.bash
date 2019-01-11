@@ -10,6 +10,7 @@ rosdep update
 sudo apt install python-rosinstall python-rosinstall-generator python-wstool build-essential
 echo "source /opt/ros/kinetic/setup.bash" >> ~/.bashrc
 echo "source ~/catkin_ws/devel/setup.bash" >> ~/.bashrc
+echo "ROS_IP=$(hostname -I | cut -d' ' -f1)" >> ~/.bashrc
 source ~/.bashrc
 mkdir -p ~/catkin_ws/src
 cd ~/catkin_ws/src/
@@ -17,3 +18,4 @@ git clone https://github.com/mkaskov/module_gui
 cd ~/catkin_ws/
 catkin_make
 source ~/.bashrc
+
