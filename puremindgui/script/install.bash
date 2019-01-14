@@ -20,5 +20,5 @@ cd ~/catkin_ws/
 source /opt/ros/kinetic/setup.bash
 catkin_make
 source ~/.bashrc
-cd ~/catkin_ws/src/puremindgui/script/
+cd ~/catkin_ws/src/moudle_gui/puremindgui/script/
 bash buid.bash
