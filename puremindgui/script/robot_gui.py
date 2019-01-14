@@ -80,7 +80,7 @@ class Frame(wx.Frame):
             rviz_env = os.environ.copy()
             # self.process_rviz = subprocess.Popen(['gnome-terminal', '--disable-factory', '-e', 'bash launch.bash'],preexec_fn=os.setpgrp,env=rviz_env)
             self.process_rviz = subprocess.Popen(['gnome-terminal', '--disable-factory', "-e",
-                                                  'bash /home/user/catkin_ws/src/moudle_gui/puremindgui/script/launch.bash'],
+                                                  'bash /home/user/catkin_ws/src/module_gui/puremindgui/script/launch.bash'],
                                                  preexec_fn=os.setpgrp, env=rviz_env)
         else:
             self.statusbar.SetStatusText('robot unavailable')
