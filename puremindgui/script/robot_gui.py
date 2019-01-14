@@ -88,7 +88,7 @@ class Frame(wx.Frame):
         else:
             self.statusbar.SetStatusText('robot unavailable')
 
-    def kellTerminal(self):
+    def killTerminal(self):
         if (self.hasPID):
             os.killpg(self.process_rviz.pid, signal.SIGINT)
 
@@ -106,7 +106,7 @@ class Frame(wx.Frame):
         self.makeConnect()
 
     def onShutdown(self,event):
-        self.kellTerminal()
+        self.killTerminal()
 
     def OnClose(self, event):
         dlg = wx.MessageDialog(self,
@@ -115,7 +115,7 @@ class Frame(wx.Frame):
         result = dlg.ShowModal()
         dlg.Destroy()
         if result == wx.ID_OK:
-            self.kellTerminal()
+            self.killTerminal()
             self.Destroy()
 
 app = wx.App(redirect=True)  # Error messages go to popup window
