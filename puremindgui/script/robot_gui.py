@@ -28,7 +28,12 @@ class Frame(wx.Frame):
         wx.Frame.__init__(self, None, title=title, pos=(150, 150), size=(200, 200),style=wx.DEFAULT_FRAME_STYLE ^ wx.RESIZE_BORDER)
         self.Bind(wx.EVT_CLOSE, self.OnClose)
 
+        self.statusbar = self.CreateStatusBar()
+
         self.hasPID = False
+
+        self.path=os.path.expanduser("~/catkin_ws/src/module_gui/puremindgui/script/")
+        self.bashcommand = 'bash ' + self.path + 'launch.bash'
 
         menuBar = wx.MenuBar()
         menu = wx.Menu()
@@ -37,12 +42,10 @@ class Frame(wx.Frame):
         menuBar.Append(menu, "&File")
         self.SetMenuBar(menuBar)
 
-        self.statusbar = self.CreateStatusBar()
-
         self.panel = wx.Panel(self)
         box = wx.BoxSizer(wx.VERTICAL)
 
-        control = ["Phone No", "###.###.###.###", "", 'F^-', "^\(\d{3}\) \d{3}-\d{4}", '', '', '']
+        control = ["ip address", "###.###.###.###", "", 'F^-', "^\d{3}.\d{3}.\d{3}.\d{3}", '', '', '']
         self.maskText = masked.TextCtrl(self.panel,
                                    mask=control[1],
                                    excludeChars=control[2],
@@ -70,6 +73,9 @@ class Frame(wx.Frame):
         self.panel.SetSizer(box)
         self.panel.Layout()
 
+
+
+
     def makeConnect(self):
         self.statusbar.SetStatusText('')
         iptext = self.maskText.GetValue().replace(' ', '')
@@ -78,10 +84,7 @@ class Frame(wx.Frame):
             self.hasPID = True
             os.environ['ROS_MASTER_URI'] = "http://ipaddr:11311".replace("ipaddr", iptext)
             rviz_env = os.environ.copy()
-            # self.process_rviz = subprocess.Popen(['gnome-terminal', '--disable-factory', '-e', 'bash launch.bash'],preexec_fn=os.setpgrp,env=rviz_env)
-            self.process_rviz = subprocess.Popen(['gnome-terminal', '--disable-factory', "-e",
-                                                  'bash /home/user/catkin_ws/src/module_gui/puremindgui/script/launch.bash'],
-                                                 preexec_fn=os.setpgrp, env=rviz_env)
+            self.process_rviz = subprocess.Popen(['gnome-terminal', '--disable-factory', "-e",self.bashcommand],preexec_fn=os.setpgrp, env=rviz_env)
         else:
             self.statusbar.SetStatusText('robot unavailable')
 
@@ -92,14 +95,10 @@ class Frame(wx.Frame):
 
 
 
-
-
     def onTextKeyEvent(self, event):
         keycode = event.GetKeyCode()
         if keycode == wx.WXK_RETURN or keycode == wx.WXK_NUMPAD_ENTER:
             self.makeConnect()
-            # self.panel.SetCursor(wx.Cursor(wx.CURSOR_BLANK))
-            # self.maskText.SetCursor(wx.Cursor(wx.CURSOR_CHAR))
             self.maskText.Navigate()
         event.Skip()
 

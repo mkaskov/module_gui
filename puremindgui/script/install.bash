@@ -22,3 +22,4 @@ catkin_make
 source ~/.bashrc
 cd ~/catkin_ws/src/module_gui/puremindgui/script/
 bash build.bash
+cp dist/robot_gui ~/Desktop/
