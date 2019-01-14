@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 sudo apt install libappstream3 -y
 sudo apt install git -y
+sudo apt install python-pip -y
+sudo pip2 install pyinstaller
 sudo sh -c 'echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" > /etc/apt/sources.list.d/ros-latest.list'
 sudo apt-key adv --keyserver hkp://ha.pool.sks-keyservers.net:80 --recv-key 421C365BD9FF1F717815A3895523BAEEB01FA116
 sudo apt-get update
@@ -18,4 +20,5 @@ cd ~/catkin_ws/
 source /opt/ros/kinetic/setup.bash
 catkin_make
 source ~/.bashrc
-
+cd ~/catkin_ws/src/puremindgui/script/
+bash buid.bash

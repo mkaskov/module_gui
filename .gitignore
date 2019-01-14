@@ -1,0 +1,8 @@
+
+puremindgui/script/robot_gui\.spec
+
+puremindgui/script/__pycache__/
+
+puremindgui/script/build/
+
+puremindgui/script/dist/

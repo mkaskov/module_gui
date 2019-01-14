@@ -1,4 +1,4 @@
 <launch>
-  <node pkg="rviz" type="rviz" name="rviz" args="-d $(find puremindgui)/config/map.rviz" output="log" respawn="true"/>
+  <node pkg="rviz" type="rviz" name="rviz" args="-d $(find puremindgui)/config/map.rviz" output="log"/>
 </launch>
 
