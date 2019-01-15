@@ -6,3 +6,7 @@ puremindgui/script/__pycache__/
 puremindgui/script/build/
 
 puremindgui/script/dist/
+
+puremindgui/script/util/__pycache__/
+
+*.pyc

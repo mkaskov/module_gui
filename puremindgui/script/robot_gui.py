@@ -5,32 +5,20 @@ import wx, wx.html,wx.lib
 import wx.lib.masked as masked
 import subprocess
 import signal
-from socket import *
 import os
-
-def pingit(hostip):
-    s = socket(AF_INET, SOCK_STREAM)
-    host = hostip
-    port = 11311
-
-    try:
-        s.connect((host, port))
-    except: # if failed to connect
-        s.close()
-        return False
-
-    while True:
-        s.close()
-        return True
+from util import scanLocalNetwork
+from concurrent.futures import ThreadPoolExecutor
 
 class Frame(wx.Frame):
     def __init__(self, title):
-        wx.Frame.__init__(self, None, title=title, pos=(150, 150), size=(200, 200),style=wx.DEFAULT_FRAME_STYLE ^ wx.RESIZE_BORDER)
+        wx.Frame.__init__(self, None, title=title, pos=(150, 150), size=(410, 205),style=wx.DEFAULT_FRAME_STYLE ^ wx.RESIZE_BORDER)
         self.Bind(wx.EVT_CLOSE, self.OnClose)
 
         self.statusbar = self.CreateStatusBar()
 
         self.hasPID = False
+
+        self.iptext = ""
 
         self.path=os.path.expanduser("~/catkin_ws/src/module_gui/puremindgui/script/")
         self.bashcommand = 'bash ' + self.path + 'launch.bash'
@@ -44,6 +32,15 @@ class Frame(wx.Frame):
 
         self.panel = wx.Panel(self)
         box = wx.BoxSizer(wx.VERTICAL)
+
+        lbl1 = wx.StaticText(self.panel, -1, style=wx.ALIGN_CENTER)
+        lbl1.SetFont(self.GetFont())
+        lbl1.SetLabel("ip address")
+        box.Add(lbl1, 0, wx.ALL, 5)
+
+        self.lbl2 = wx.StaticText(self.panel, -1, style=wx.ALIGN_CENTER,pos=(200,5))
+        self.lbl2.SetFont(self.GetFont())
+        self.lbl2.SetLabel("scaning for robots ...")
 
         control = ["ip address", "###.###.###.###", "", 'F^-', "^\d{3}.\d{3}.\d{3}.\d{3}", '', '', '']
         self.maskText = masked.TextCtrl(self.panel,
@@ -62,6 +59,10 @@ class Frame(wx.Frame):
         self.maskText.Bind(wx.EVT_KEY_DOWN, self.onTextKeyEvent)
         box.Add(self.maskText, 0, wx.ALL, 10)
 
+        # self.lst = wx.ListBox(self.panel, pos=(200, 30), size = (200,200), choices=scanLocalNetwork.getRobotList(), style=wx.LB_SINGLE)
+        self.lst = wx.ListBox(self.panel, pos=(200, 30), size = (200,200), choices=[], style=wx.LB_SINGLE)
+        self.Bind(wx.EVT_LISTBOX, self.selectRobotIp, self.lst)
+
         m_close = wx.Button(self.panel, wx.ID_CLOSE, "Connect")
         m_close.Bind(wx.EVT_BUTTON, self.OnConnect)
         box.Add(m_close, 0, wx.ALL, 10)
@@ -75,24 +76,40 @@ class Frame(wx.Frame):
 
 
 
+        executor = ThreadPoolExecutor(max_workers=2)
+        threadGetRobotList = executor.submit(scanLocalNetwork.getRobotList)
+        threadGetRobotList.add_done_callback(self.callbackRobotList)
+
+    def callbackRobotList(self,value):
+        self.lst.Set(value.result())
+        self.lbl2.SetLabel("robot list")
+
+    def selectRobotIp(self,event):
+        text_ = self.lst.GetString(self.lst.GetSelection())
+        text_ = text_.split(".")
+        text_ = ["{:03d}".format(int(elem)) for elem in text_]
+        text_ = "".join(text_)
+
+        self.maskText.SetValue(text_)
 
     def makeConnect(self):
         self.statusbar.SetStatusText('')
         iptext = self.maskText.GetValue().replace(' ', '')
 
-        if (pingit(iptext)):
+        if (scanLocalNetwork.pingit(iptext)):
             self.hasPID = True
             os.environ['ROS_MASTER_URI'] = "http://ipaddr:11311".replace("ipaddr", iptext)
+            self.iptext = iptext
             rviz_env = os.environ.copy()
             self.process_rviz = subprocess.Popen(['gnome-terminal', '--disable-factory', "-e",self.bashcommand],preexec_fn=os.setpgrp, env=rviz_env)
+            self.statusbar.SetStatusText('connected to robot: ' + self.iptext)
         else:
-            self.statusbar.SetStatusText('robot unavailable')
+            self.statusbar.SetStatusText('robot unavailable: ' + self.iptext)
 
     def killTerminal(self):
         if (self.hasPID):
             os.killpg(self.process_rviz.pid, signal.SIGINT)
-
-
+        self.statusbar.SetStatusText('disconnected from robot: ' + self.iptext)
 
 
     def onTextKeyEvent(self, event):
@@ -118,7 +135,10 @@ class Frame(wx.Frame):
             self.killTerminal()
             self.Destroy()
 
-app = wx.App(redirect=True)  # Error messages go to popup window
-top = Frame("Run rviz")
-top.Show()
-app.MainLoop()
+def runApp():
+    app = wx.App(redirect=True)  # Error messages go to popup window
+    top = Frame("Run rviz")
+    top.Show()
+    app.MainLoop()
+
+runApp()
