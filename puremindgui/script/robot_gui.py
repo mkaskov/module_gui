@@ -63,9 +63,9 @@ class Frame(wx.Frame):
         self.lst = wx.ListBox(self.panel, pos=(200, 30), size = (200,200), choices=[], style=wx.LB_SINGLE)
         self.Bind(wx.EVT_LISTBOX, self.selectRobotIp, self.lst)
 
-        m_close = wx.Button(self.panel, wx.ID_CLOSE, "Connect")
-        m_close.Bind(wx.EVT_BUTTON, self.OnConnect)
-        box.Add(m_close, 0, wx.ALL, 10)
+        self.b_connect = wx.Button(self.panel, wx.ID_CLOSE, "Connect")
+        self.b_connect.Bind(wx.EVT_BUTTON, self.OnConnect)
+        box.Add(self.b_connect, 0, wx.ALL, 10)
 
         m_shut = wx.Button(self.panel, wx.ID_CLOSE, "Shutdown")
         m_shut.Bind(wx.EVT_BUTTON, self.onShutdown)
@@ -97,12 +97,17 @@ class Frame(wx.Frame):
         iptext = self.maskText.GetValue().replace(' ', '')
 
         if (scanLocalNetwork.pingit(iptext)):
+            if (self.hasPID):
+                os.killpg(self.process_rviz.pid, signal.SIGINT)
+
             self.hasPID = True
             os.environ['ROS_MASTER_URI'] = "http://ipaddr:11311".replace("ipaddr", iptext)
+            os.environ['ROS_IP'] = scanLocalNetwork.getLocalIp()
             self.iptext = iptext
             rviz_env = os.environ.copy()
             self.process_rviz = subprocess.Popen(['gnome-terminal', '--disable-factory', "-e",self.bashcommand],preexec_fn=os.setpgrp, env=rviz_env)
             self.statusbar.SetStatusText('connected to robot: ' + self.iptext)
+            self.b_connect.Disable()
         else:
             self.statusbar.SetStatusText('robot unavailable: ' + self.iptext)
 
@@ -110,6 +115,7 @@ class Frame(wx.Frame):
         if (self.hasPID):
             os.killpg(self.process_rviz.pid, signal.SIGINT)
         self.statusbar.SetStatusText('disconnected from robot: ' + self.iptext)
+        self.b_connect.Enable()
 
 
     def onTextKeyEvent(self, event):

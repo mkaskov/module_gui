@@ -11,6 +11,13 @@ def getNetMask():
     s.close()
     return netmask
 
+def getLocalIp():
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    s.connect(("8.8.8.8", 80))
+    ipaddr = s.getsockname()[0]
+    s.close()
+    return ipaddr
+
 def pingit(hostip):
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     host = hostip
