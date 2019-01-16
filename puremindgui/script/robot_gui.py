@@ -59,8 +59,7 @@ class Frame(wx.Frame):
         self.maskText.Bind(wx.EVT_KEY_DOWN, self.onTextKeyEvent)
         box.Add(self.maskText, 0, wx.ALL, 10)
 
-        # self.lst = wx.ListBox(self.panel, pos=(200, 30), size = (200,200), choices=scanLocalNetwork.getRobotList(), style=wx.LB_SINGLE)
-        self.lst = wx.ListBox(self.panel, pos=(200, 30), size = (200,200), choices=[], style=wx.LB_SINGLE)
+        self.lst = wx.ListBox(self.panel, pos=(200, 30), size = (200,150), choices=[], style=wx.LB_SINGLE)
         self.Bind(wx.EVT_LISTBOX, self.selectRobotIp, self.lst)
 
         self.b_connect = wx.Button(self.panel, wx.ID_CLOSE, "Connect")
@@ -71,21 +70,36 @@ class Frame(wx.Frame):
         m_shut.Bind(wx.EVT_BUTTON, self.onShutdown)
         box.Add(m_shut, 0, wx.ALL, 10)
 
+        bmpReload = wx.Bitmap("png/refresh-15.png", wx.BITMAP_TYPE_ANY)
+        self.btnReload = wx.BitmapButton(self.panel, id=wx.ID_ANY, bitmap=bmpReload,
+                                  size=(30 ,30),pos=(372, 0))
+        self.btnReload.Bind(wx.EVT_BUTTON, self.onReload)
+
+
         self.panel.SetSizer(box)
         self.panel.Layout()
 
 
 
-        executor = ThreadPoolExecutor(max_workers=2)
-        threadGetRobotList = executor.submit(scanLocalNetwork.getRobotList)
+        self.executor = ThreadPoolExecutor(max_workers=2)
+        threadGetRobotList = self.executor.submit(scanLocalNetwork.getRobotList)
         threadGetRobotList.add_done_callback(self.callbackRobotList)
+
+    def onReload(self,event):
+        self.lbl2.SetLabel("scanning for robots ...")
+        self.lst.Set([])
+        threadGetRobotList = self.executor.submit(scanLocalNetwork.getRobotList)
+        threadGetRobotList.add_done_callback(self.callbackRobotList)
+        self.btnReload.Disable()
 
     def callbackRobotList(self,value):
         if(len(value.result())>0):
             wx.CallAfter(self.lst.Set, value.result())
             wx.CallAfter(self.lbl2.SetLabel, 'robots list')
+            wx.CallAfter(self.btnReload.Enable)
         else:
             wx.CallAfter(self.lbl2.SetLabel, 'robots not found')
+            wx.CallAfter(self.btnReload.Enable)
 
     def selectRobotIp(self,event):
         text_ = self.lst.GetString(self.lst.GetSelection())
