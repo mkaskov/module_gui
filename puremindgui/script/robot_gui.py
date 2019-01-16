@@ -40,7 +40,7 @@ class Frame(wx.Frame):
 
         self.lbl2 = wx.StaticText(self.panel, -1, style=wx.ALIGN_CENTER,pos=(200,5))
         self.lbl2.SetFont(self.GetFont())
-        self.lbl2.SetLabel("scaning for robots ...")
+        self.lbl2.SetLabel("scanning for robots ...")
 
         control = ["ip address", "###.###.###.###", "", 'F^-', "^\d{3}.\d{3}.\d{3}.\d{3}", '', '', '']
         self.maskText = masked.TextCtrl(self.panel,
@@ -81,8 +81,11 @@ class Frame(wx.Frame):
         threadGetRobotList.add_done_callback(self.callbackRobotList)
 
     def callbackRobotList(self,value):
-        self.lst.Set(value.result())
-        self.lbl2.SetLabel("robot list")
+        if(len(value.result())>0):
+            wx.CallAfter(self.lst.Set, value.result())
+            wx.CallAfter(self.lbl2.SetLabel, 'robots list')
+        else:
+            wx.CallAfter(self.lbl2.SetLabel, 'robots not found')
 
     def selectRobotIp(self,event):
         text_ = self.lst.GetString(self.lst.GetSelection())
