@@ -9,6 +9,38 @@ import os
 from util import scanLocalNetwork
 from concurrent.futures import ThreadPoolExecutor
 
+textLocal = [
+"ip address",
+"scanning ...",
+"Connect",
+"Shutdown",
+"Reload",
+'robots list',
+'robots not found',
+'connected to robot: ',
+'robot unavailable: ' ,
+'disconnected from robot: ',
+"Do you really want to close this application?",
+"Confirm Exit",
+"Run rviz"
+]
+
+textLocalRus = [
+"ip адрес",
+"поиск ...",
+"Подключиться",
+"Выключить",
+"Скан",
+'роботы',
+'роботы не обнаружены',
+'подключен к роботу: ',
+'робот недоступен: ' ,
+'отключен от робота: ',
+"Вы желаете закрыть приложение?",
+"Подтвертить выход",
+"Запуск rviz"
+]
+
 class Frame(wx.Frame):
     def __init__(self, title):
         wx.Frame.__init__(self, None, title=title, pos=(150, 150), size=(410, 205),style=wx.DEFAULT_FRAME_STYLE ^ wx.RESIZE_BORDER)
@@ -35,12 +67,12 @@ class Frame(wx.Frame):
 
         lbl1 = wx.StaticText(self.panel, -1, style=wx.ALIGN_CENTER)
         lbl1.SetFont(self.GetFont())
-        lbl1.SetLabel("ip address")
+        lbl1.SetLabel(textLocal[0])
         box.Add(lbl1, 0, wx.ALL, 5)
 
         self.lbl2 = wx.StaticText(self.panel, -1, style=wx.ALIGN_CENTER,pos=(200,5))
         self.lbl2.SetFont(self.GetFont())
-        self.lbl2.SetLabel("scanning for robots ...")
+        self.lbl2.SetLabel(textLocal[1])
 
         control = ["ip address", "###.###.###.###", "", 'F^-', "^\d{3}.\d{3}.\d{3}.\d{3}", '', '', '']
         self.maskText = masked.TextCtrl(self.panel,
@@ -62,19 +94,16 @@ class Frame(wx.Frame):
         self.lst = wx.ListBox(self.panel, pos=(200, 30), size = (200,150), choices=[], style=wx.LB_SINGLE)
         self.Bind(wx.EVT_LISTBOX, self.selectRobotIp, self.lst)
 
-        self.b_connect = wx.Button(self.panel, wx.ID_CLOSE, "Connect")
+        self.b_connect = wx.Button(self.panel, wx.ID_CLOSE, textLocal[2])
         self.b_connect.Bind(wx.EVT_BUTTON, self.OnConnect)
         box.Add(self.b_connect, 0, wx.ALL, 10)
 
-        m_shut = wx.Button(self.panel, wx.ID_CLOSE, "Shutdown")
+        m_shut = wx.Button(self.panel, wx.ID_CLOSE, textLocal[3])
         m_shut.Bind(wx.EVT_BUTTON, self.onShutdown)
         box.Add(m_shut, 0, wx.ALL, 10)
 
-        bmpReload = wx.Bitmap("png/refresh-15.png", wx.BITMAP_TYPE_ANY)
-        self.btnReload = wx.BitmapButton(self.panel, id=wx.ID_ANY, bitmap=bmpReload,
-                                  size=(30 ,30),pos=(372, 0))
+        self.btnReload = wx.Button(self.panel, wx.ID_CLOSE, textLocal[4],pos=(315, 0))
         self.btnReload.Bind(wx.EVT_BUTTON, self.onReload)
-
 
         self.panel.SetSizer(box)
         self.panel.Layout()
@@ -86,7 +115,7 @@ class Frame(wx.Frame):
         threadGetRobotList.add_done_callback(self.callbackRobotList)
 
     def onReload(self,event):
-        self.lbl2.SetLabel("scanning for robots ...")
+        self.lbl2.SetLabel(textLocal[1])
         self.lst.Set([])
         threadGetRobotList = self.executor.submit(scanLocalNetwork.getRobotList)
         threadGetRobotList.add_done_callback(self.callbackRobotList)
@@ -95,10 +124,10 @@ class Frame(wx.Frame):
     def callbackRobotList(self,value):
         if(len(value.result())>0):
             wx.CallAfter(self.lst.Set, value.result())
-            wx.CallAfter(self.lbl2.SetLabel, 'robots list')
+            wx.CallAfter(self.lbl2.SetLabel,  textLocal[5])
             wx.CallAfter(self.btnReload.Enable)
         else:
-            wx.CallAfter(self.lbl2.SetLabel, 'robots not found')
+            wx.CallAfter(self.lbl2.SetLabel, textLocal[6])
             wx.CallAfter(self.btnReload.Enable)
 
     def selectRobotIp(self,event):
@@ -123,15 +152,18 @@ class Frame(wx.Frame):
             self.iptext = iptext
             rviz_env = os.environ.copy()
             self.process_rviz = subprocess.Popen(['gnome-terminal', '--disable-factory', "-e",self.bashcommand],preexec_fn=os.setpgrp, env=rviz_env)
-            self.statusbar.SetStatusText('connected to robot: ' + self.iptext)
+            self.statusbar.SetStatusText(textLocal[7] + self.iptext)
             self.b_connect.Disable()
         else:
-            self.statusbar.SetStatusText('robot unavailable: ' + self.iptext)
+            if(iptext=="..."):
+                iptext=""
+            self.statusbar.SetStatusText(textLocal[8]+ iptext)
+            self.iptext = ""
 
     def killTerminal(self):
         if (self.hasPID):
             os.killpg(self.process_rviz.pid, signal.SIGINT)
-        self.statusbar.SetStatusText('disconnected from robot: ' + self.iptext)
+        self.statusbar.SetStatusText(textLocal[9] + self.iptext)
         self.b_connect.Enable()
 
 
@@ -150,8 +182,8 @@ class Frame(wx.Frame):
 
     def OnClose(self, event):
         dlg = wx.MessageDialog(self,
-                               "Do you really want to close this application?",
-                               "Confirm Exit", wx.OK | wx.CANCEL | wx.ICON_QUESTION)
+                               textLocal[10],
+                               textLocal[11], wx.OK | wx.CANCEL | wx.ICON_QUESTION)
         result = dlg.ShowModal()
         dlg.Destroy()
         if result == wx.ID_OK:
@@ -160,7 +192,7 @@ class Frame(wx.Frame):
 
 def runApp():
     app = wx.App(redirect=True)  # Error messages go to popup window
-    top = Frame("Run rviz")
+    top = Frame(textLocal[12])
     top.Show()
     app.MainLoop()
 
