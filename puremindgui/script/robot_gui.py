@@ -130,25 +130,28 @@ class Frame(wx.Frame):
             wx.CallAfter(self.lbl2.SetLabel, textLocal[6])
             wx.CallAfter(self.btnReload.Enable)
 
+    def extendIP(self,ip_,merger):
+        text_ = ip_.split(".")
+        text_ = ["{:03d}".format(int(elem)) for elem in text_]
+        return merger.join(text_)
+
     def selectRobotIp(self,event):
         text_ = self.lst.GetString(self.lst.GetSelection())
-        text_ = text_.split(".")
-        text_ = ["{:03d}".format(int(elem)) for elem in text_]
-        text_ = "".join(text_)
-
-        self.maskText.SetValue(text_)
+        self.maskText.SetValue(self.extendIP(text_,""))
 
     def makeConnect(self):
         self.statusbar.SetStatusText('')
         iptext = self.maskText.GetValue().replace(' ', '')
 
-        if (scanLocalNetwork.pingit(iptext)):
+        if (self.extendIP(scanLocalNetwork.getLocalIp(),".") == iptext or scanLocalNetwork.pingit(iptext)):
             if (self.hasPID):
                 os.killpg(self.process_rviz.pid, signal.SIGINT)
 
             self.hasPID = True
-            os.environ['ROS_MASTER_URI'] = "http://ipaddr:11311".replace("ipaddr", iptext)
-            os.environ['ROS_IP'] = scanLocalNetwork.getLocalIp()
+
+            if(self.extendIP(scanLocalNetwork.getLocalIp(),".")!=iptext):
+                os.environ['ROS_MASTER_URI'] = "http://ipaddr:11311".replace("ipaddr", iptext)
+                os.environ['ROS_IP'] = scanLocalNetwork.getLocalIp()
             self.iptext = iptext
             rviz_env = os.environ.copy()
             self.process_rviz = subprocess.Popen(['gnome-terminal', '--disable-factory', "-e",self.bashcommand],preexec_fn=os.setpgrp, env=rviz_env)
