@@ -348,6 +348,7 @@
 
     <gazebo reference="sim_cam">
         <sensor type="depth" name="openni_camera">
+            <update_rate>10.0</update_rate>
            <!--  <always_on>1</always_on>
             <visualize>true</visualize>
             <camera>
