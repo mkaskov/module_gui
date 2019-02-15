@@ -39,7 +39,8 @@ def pingLocalNetwork(netmask):
 
     p = subprocess.Popen(["nmap -sn -v "+netmask+"0/24"], stdout=subprocess.PIPE,shell=True,  executable='/bin/bash')  # for python3
     output = str(p.stdout.read())                                                                                      # for python3
-    outarr = output.split("\\n")                                                                                       # for python3
+    # outarr = output.split("\\n")                                                                                       # for python3
+    outarr = output.split("\n")      # ????                                                                                   # for python3
 
     outarrClean1 = [elem for elem in outarr if "scan report" in elem]
     outarrClean2 = [elem for elem in outarrClean1 if "host down" not in elem]
