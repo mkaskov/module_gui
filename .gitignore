@@ -10,3 +10,7 @@ puremindgui/script/dist/
 puremindgui/script/util/__pycache__/
 
 *.pyc
+
+puremindgui/script/robot-tools\.spec
+
+puremindgui/script/launcher\.spec

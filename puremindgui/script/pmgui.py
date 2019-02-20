@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 """
-usage:
-rosrun proteus_demo ImageView.py image:=/ATRV/CameraMain
 """
 import roslib
 roslib.load_manifest('rospy')
@@ -42,27 +40,23 @@ isUpdated = False
 pubcommand = rospy.Publisher("/slam/mapcommand", rosString,queue_size=10)
 shutdownAll = rospy.Publisher("/remote_manager/shutdown", rosString,queue_size=10)
 
-
-iSsave_map = 0
-iSonly_odom = 0
-iSdelet_map_on_start = 0
-localizationType = 0
-publish_pcl=0
-
 # mods 1 -new, 2-open,3-edit  // # localization 1 - localization,2 - edit // # savemap  1 -save,2-not save
 # pcl - 1 publish, 2 -notpublish
 # delet_map_on_start 1 - delete, 2 - notdelete
 # onlyodom 1 - odom,2- noodom
 
-level1 = 10
 # level2 = level1+200
-level2 = 10
 # level3 = level2+310
+
+level1 = 10
+level2 = 10
 level3 = 10
 
 sizepanel1 = (600,250)
 sizepanel2 = (600,320)
 sizepanel3 = (600,100)
+
+rosInit = False
 
 class PureMindGui(wx.App):
     def OnInit(self):
@@ -242,6 +236,17 @@ class PureMindGui(wx.App):
             wx.CallAfter(self.btnReload.Enable)
 
     def subRosMapList(self):
+        global rosInit
+        # print("call subromaps")
+        # print(os.environ)
+        for i in os.environ:
+            if "ROS" in i:
+                print(i,os.environ[i])
+
+        if not rosInit:
+            rospy.init_node('pureminggui_mapselector',disable_signals=True)
+            rosInit = True
+
         self.ros_maplist_sub = rospy.Subscriber("/slam/maplist", rosString, self.updMapList)
 
     def OnConnect(self, event):
@@ -283,7 +288,10 @@ class PureMindGui(wx.App):
     def clearProcesses(self):
         rosstr = rosString()
         rosstr.data = ",".join("")
-        shutdownAll.publish(rosstr)
+        try:
+            shutdownAll.publish(rosstr)
+        except:
+            pass
 
         for proc in self.process_list:
             os.killpg(proc.pid, signal.SIGINT)
@@ -306,11 +314,12 @@ class PureMindGui(wx.App):
         self.mapname.SetValue(text__)
 
     def makeConnect(self):
-        topicsrospy_ = rospy.get_published_topics()
-        topics_ = [x[0] for x in topicsrospy_]
-
-        if "/slam/maplist" not in topics_:
-            return False,None
+        # this check, if remote manager available
+        # topicsrospy_ = rospy.get_published_topics()
+        # topics_ = [x[0] for x in topicsrospy_]
+        #
+        # if "/slam/maplist" not in topics_:
+        #     return False,None
 
         self.connect_status.SetLabel('')
         iptext = self.maskText.GetValue().replace(' ', '')
@@ -438,20 +447,21 @@ class PureMindGui(wx.App):
         self.mapListArray = maplist[:-1]
         wx.CallAfter(self.maplst.Set, maplist[:-1])
         self.ros_maplist_sub.unregister()
+        # rospy.signal_shutdown("map list get over")
 
 class Panel(wx.Panel):
     def updMapList(self,maps):
         return
 
-def handle(data):
-    global isUpdated
-    if not isUpdated:
-        wx.CallAfter(wx.GetApp().updMapList, data)
-        isUpdated = True
+# def handle(data):
+#     global isUpdated
+#     if not isUpdated:
+#         wx.CallAfter(wx.GetApp().updMapList, data)
+#         isUpdated = True
 
 def main(argv):
     app = PureMindGui()
-    rospy.init_node('pureminggui_mapselector')
+    # rospy.init_node('pureminggui_mapselector')
     # rospy.Subscriber("/slam/maplist", rosString, handle)
     print(__doc__)
     app.MainLoop()
